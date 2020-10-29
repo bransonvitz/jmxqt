@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# Copyright (c) 2020 All Rights Reserved
+# Contact information for this software is available at:
+# https://github.com/bransonvitz/jmxqt
+#
+# This file is part of jmxqt.
+#
+# jmxqt is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# jmxqt is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the
+# GNU Lesser General Public License along with jmxqt.
+# If not, see <http://www.gnu.org/licenses/>.
+HDL=${HOME}
+LFN=${HDL}/log/jmxqt.log
+JTD=${HDL}/jmeter
+DOC=""
+TST=0
+OK=9
+
+function stgJMeter {
+	DOC=${1}
+	TST=$((${2}))
+	if [ -x ${HDL}/bin/jmxqt ]; then
+		${HDL}/bin/jmxqt stage ${DOC} ${TST} 1>>${LFN} 2>&1
+		OK=$?
+	else OK=0 ; fi
+}
+
+function xqtJMeter {
+	if [ ! -x ${HDL}/bin/jmxqt ]; then
+		JHX=2048
+		CSV=$(pwd)/txn.csv
+		JLF=$(pwd)/jmeter.log
+		JTF=$(pwd)/$(find . -type f -name ${DOC} | sed "s/^\.//")
+		if [ -r ${JTF} ]; then
+			cd ${JTD}/bin
+			java -Xms512M -Xmx${JHX}M -jar ApacheJMeter.jar -n -d ${JTD} -j ${JLF} -l ${CSV} -t ${JTF} 1>>${LFN} 2>&1
+		else echo "ERR=>>> no valid JMX specified (${JTF})" 1>>${LFN} 2>&1 ; fi
+	else ${HDL}/bin/jmxqt launch ${DOC} ${TST} 1>>${LFN} 2>&1 ; fi
+}
+
+if [ "${1}" != "" ]; then
+	stgJMeter $@
+	if [ ${OK} -eq 0 ]; then
+		xqtJMeter
+	else echo -e "ERR=>>> failure staging footprint" 1>>${LFN} 2>&1 ; fi
+else echo "ERR=>>> no JMX specified" 1>>${LFN} 2>&1 ; OK=1 ; fi
