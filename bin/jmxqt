@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# Copyright (c) 2020 All Rights Reserved
+# Contact information for this software is available at:
+# https://github.com/bransonvitz/jmxqt
+#
+# This file is part of jmxqt.
+#
+# jmxqt is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# jmxqt is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the
+# GNU Lesser General Public License along with jmxqt.
+# If not, see <http://www.gnu.org/licenses/>.
+HDL=${HOME}
+WDL=${HDL}/var/test
+DCI=""
+PFX=localprefix
+NES=${HDL}/bin/nativeexecutionscript
+TVN=TestIdVariableName
+
+function jmLaunch {
+	TST=$((${2}))
+	echo "DBG=>>> jmLaunch: $@"
+	if [ ${TST} -eq 0 ]; then TST=$((101)) ; rm -rf ${WDL}/${TST} ; fi
+	PVS="${TVN}=${TST}"
+	echo "{\"tst\":${TST},\"doc\":\"${1}\"}" > ./${PFX}.json
+	if [ "${DCI}" != "" ]; then
+		docker run --rm -d -v ${WDL}:/home/${PFX}/var/test -e ${TVN}=${TST} ${DCI}
+	else (export ${PVS} ; ${TVN}=${TST} ${NES} --local ${1}) ; fi
+}
+
+if [ "${1}" == "launch" ]; then
+	shift
+	jmLaunch $@
+fi
