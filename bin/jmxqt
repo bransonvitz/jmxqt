@@ -33,8 +33,8 @@ function jmLaunch {
 	PVS="${TVN}=${TST}"
 	echo "{\"tst\":${TST},\"doc\":\"${1}\"}" > ./${PFX}.json
 	if [ "${DCI}" != "" ]; then
-		docker run --rm -d -v ${WDL}:/home/${PFX}/var/test -e ${TVN}=${TST} ${DCI}
-	else (export ${PVS} ; ${TVN}=${TST} ${NES} --local ${1}) ; fi
+		docker run --rm -d -v ${WDL}:/home/${PFX}/var/test -e ${PVS} ${DCI}
+	else (export ${PVS} ; ${NES} --local ${1}) ; fi
 }
 
 if [ "${1}" == "launch" ]; then
